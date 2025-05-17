@@ -17,18 +17,22 @@ from scanner import scan
 
 class State:
     def __init__(self) -> None:
+        print('init State')
         self.running = False
+        print('host')
         self.host = os.getenv('HOST_NAME', 'unknown-host')
+        print('disks')
         self.disks = self._load_disks()
 
     def _load_disks(self):
         disks_json = os.getenv('DISKS_JSON', '{}')
+        print(f'disks_json: "{disks_json}"')
         try:
             return json.loads(disks_json)
         except json.JSONDecodeError:
             return {}
 
-
+print('Starting')
 STATE = State()
 
 app = Flask(__name__)
