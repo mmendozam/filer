@@ -91,5 +91,4 @@ async def scan_all() -> dict[str, object]:
         return {'status': 'OK'}
 
 if __name__ == '__main__':
-    # app.run(debug=True)
-    app.run()
+    app.run(host='0.0.0.0', port=5000)
