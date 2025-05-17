@@ -3,6 +3,7 @@ from pathlib import Path
 import datetime
 import os
 import json
+import logging
 from scanner import scan
 
 
@@ -15,24 +16,31 @@ from scanner import scan
 # set PYTHONPATH=E:\local\GitHub\mmendozam\mmendoza13\python\file-sync
 # flask --app controller run
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
+
+logger = logging.getLogger(__name__)
+
 class State:
     def __init__(self) -> None:
-        print('init State')
+        logger.info('init State')
         self.running = False
-        print('host')
+        logger.info('host')
         self.host = os.getenv('HOST_NAME', 'unknown-host')
-        print('disks')
+        logger.info('disks')
         self.disks = self._load_disks()
 
     def _load_disks(self):
         disks_json = os.getenv('DISKS_JSON', '{}')
-        print(f'disks_json: "{disks_json}"')
+        logger.info(f'disks_json: "{disks_json}"')
         try:
             return json.loads(disks_json)
         except json.JSONDecodeError:
             return {}
 
-print('Starting')
+logger.info('Starting')
 STATE = State()
 
 app = Flask(__name__)
@@ -95,4 +103,5 @@ async def scan_all() -> dict[str, object]:
         return {'status': 'OK'}
 
 if __name__ == '__main__':
+    logger.info("Starting Flask app...")
     app.run(host='0.0.0.0', port=5000)
