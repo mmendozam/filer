@@ -1,6 +1,8 @@
 from flask import Flask
 from pathlib import Path
 import datetime
+import os
+import json
 from scanner import scan
 
 
@@ -16,32 +18,20 @@ from scanner import scan
 class State:
     def __init__(self) -> None:
         self.running = False
-        self.host = None
-        self.disks = dict[str, object]
+        self.host = os.getenv('HOST_NAME', 'unknown-host')
+        self.disks = self._load_disks()
 
+    def _load_disks(self):
+        disks_json = os.getenv('DISKS_JSON', '{}')
+        try:
+            return json.loads(disks_json)
+        except json.JSONDecodeError:
+            return {}
 
-app = Flask(__name__)
 
 STATE = State()
 
-STATE.host = 'envy-m4'
-
-STATE.disks = {
-    'HD1': {
-        'capacity': '175 GB',
-        'usage': '30%',
-        'path': 'C:/NNLK_HOME',
-        'date': None,
-        'content': []
-    },
-    'HD2': {
-        'capacity': '750 GB',
-        'usage': '5%',
-        'path': 'E:/NNLK_HOME',
-        'date': None,
-        'content': []
-    },
-}
+app = Flask(__name__)
 
 
 def build_response(disk_name: str) -> dict[str, object]:
