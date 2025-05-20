@@ -14,6 +14,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 class State:
     running = False
     host = None
@@ -31,6 +32,7 @@ class State:
             return json.loads(disks_json)
         except json.JSONDecodeError:
             logger.info(f'error while parsing json :(')
+
 
 STATE = State()
 
@@ -53,40 +55,47 @@ def build_error(error_msg: str) -> dict[str, object]:
     logger.error(f'build_error - error_msg: "{error_msg}"')
     return {'error': error_msg}
 
+
 @app.route('/status')
 def status() -> dict[str, object]:
     logger.info(f'status')
-    return {
+    status = {
         'host': STATE.host,
         'running': STATE.running,
         'disks': [disk_name for disk_name in STATE.disks.keys()]
     }
+    logger.info(f'{status}')
+    return status
 
 
 @app.route('/scan/<disk_name>')
 def scan_disk(disk_name: str) -> dict[str, object]:
-    logger.info(f'scan_disk')
+    logger.info(f'scan_disk - disk_name: {disk_name}')
 
     if STATE.running:
         return build_error('Scanning currently going on, try later')
     if disk_name not in STATE.disks.keys():
         return build_error('Invalid name')
 
-    STATE.running = True
-    now = datetime.datetime.now()
-    logger.info(f'disk_name: {disk_name}')
-    logger.info(f'now: {str(now)}')
+    response = None
+    content = []
     disk = STATE.disks.get(disk_name, {})
     path = Path(disk.get('path'))
-    logger.info(f'path: {str(path)}')
-    logger.info(f'scanning...')
-    content = scan(path)
-    logger.info(f'content length: {len(content)}')
-    disk['content'] = content
-    disk['date'] = now
-    STATE.running = False
 
-    return build_response(disk_name)
+    try:
+        STATE.running = True
+        logger.info(f'scanning: {str(path)}')
+        content = scan(path)
+    except:
+        response = build_error(f'Scanning failed with path: {str(path)}')
+    finally:
+        logger.info(f'content length: {len(content)}')
+        disk['content'] = content
+        disk['date'] = datetime.datetime.now()
+        response = build_response(disk_name)
+        STATE.running = False
+    
+    return response
 
 
 @app.route('/disk/<disk_name>')
