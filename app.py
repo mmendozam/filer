@@ -7,21 +7,13 @@ import logging
 from scanner import scan
 
 
-# To run:
-#
-# Option 1:
-# python app.py
-#
-# Option 2:
-# set PYTHONPATH=E:\local\GitHub\mmendozam\mmendoza13\python\file-sync
-# flask --app controller run
-
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
 )
 
 logger = logging.getLogger(__name__)
+
 
 class State:
     running = False
@@ -41,13 +33,14 @@ class State:
         except json.JSONDecodeError:
             logger.info(f'error while parsing json :(')
 
+
 STATE = State()
 
 app = Flask(__name__)
 
 
 def build_response(disk_name: str) -> dict[str, object]:
-    logger.info(f'build_response "{disk_name}"')
+    logger.info(f'build_response')
     disk = STATE.disks.get(disk_name, {})
     return {
         'host': STATE.host,
@@ -58,34 +51,51 @@ def build_response(disk_name: str) -> dict[str, object]:
     }
 
 
+def build_error(error_msg: str) -> dict[str, object]:
+    logger.error(f'build_error - error_msg: "{error_msg}"')
+    return {'error': error_msg}
+
+
 @app.route('/status')
 def status() -> dict[str, object]:
     logger.info(f'status')
-    return {
+    status = {
         'host': STATE.host,
         'running': STATE.running,
         'disks': [disk_name for disk_name in STATE.disks.keys()]
     }
+    logger.info(f'{status}')
+    return status
 
 
 @app.route('/scan/<disk_name>')
 def scan_disk(disk_name: str) -> dict[str, object]:
-    logger.info(f'scanning {disk_name}')
-    if disk_name not in STATE.disks.keys():
-        return {'error': 'Invalid name'}
-
-    disk = STATE.disks.get(disk_name, {})
+    logger.info(f'scan_disk - disk_name: {disk_name}')
 
     if STATE.running:
-        return {'error': 'Scanning currently going on, try later'}
-    else:
-        STATE.running = True
-        path = Path(disk.get('path'))
-        disk['content'] = scan(path)
-        disk['date'] = datetime.datetime.now()
-        STATE.running = False
+        return build_error('Scanning currently going on, try later')
+    if disk_name not in STATE.disks.keys():
+        return build_error('Invalid name')
 
-    return build_response(disk_name)
+    response = None
+    content = []
+    disk = STATE.disks.get(disk_name, {})
+    path = Path(disk.get('path'))
+
+    try:
+        STATE.running = True
+        logger.info(f'scanning: {str(path)}')
+        content = scan(path)
+    except:
+        response = build_error(f'Scanning failed with path: {str(path)}')
+    finally:
+        logger.info(f'content length: {len(content)}')
+        disk['content'] = content
+        disk['date'] = datetime.datetime.now()
+        response = build_response(disk_name)
+        STATE.running = False
+    
+    return response
 
 
 @app.route('/disk/<disk_name>')

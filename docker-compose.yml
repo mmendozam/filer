@@ -9,4 +9,11 @@ services:
     environment:
       - HOST_NAME=${HOST_NAME}
       - DISKS_JSON=${DISKS_JSON}
+    volumes:
+      - ${DISK1_PATH}:${DISK1_PATH}
+      - ${DISK2_PATH}:${DISK2_PATH}
+      - ${DISK3_PATH}:${DISK3_PATH}
+      - ${DISK4_PATH}:${DISK4_PATH}
+      - ${DISK5_PATH}:${DISK5_PATH}
+      - ${DISK6_PATH}:${DISK6_PATH}
     restart: unless-stopped
