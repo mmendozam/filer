@@ -29,11 +29,8 @@ class State:
     disks = None
 
     def __init__(self) -> None:
-        logger.info('init State')
         self.running = False
-        logger.info('host')
         self.host = os.getenv('HOST_NAME', 'unknown-host')
-        logger.info('disks')
         self.disks = self._load_disks()
 
     def _load_disks(self):
@@ -42,15 +39,15 @@ class State:
         try:
             return json.loads(disks_json)
         except json.JSONDecodeError:
-            return {}
+            logger.info(f'error while parsing json :(')
 
-logger.info('Starting state')
 STATE = State()
 
 app = Flask(__name__)
 
 
 def build_response(disk_name: str) -> dict[str, object]:
+    logger.info(f'build_response "{disk_name}"')
     disk = STATE.disks.get(disk_name, {})
     return {
         'host': STATE.host,
@@ -63,6 +60,7 @@ def build_response(disk_name: str) -> dict[str, object]:
 
 @app.route('/status')
 def status() -> dict[str, object]:
+    logger.info(f'status')
     return {
         'host': STATE.host,
         'running': STATE.running,
@@ -72,6 +70,7 @@ def status() -> dict[str, object]:
 
 @app.route('/scan/<disk_name>')
 def scan_disk(disk_name: str) -> dict[str, object]:
+    logger.info(f'scanning {disk_name}')
     if disk_name not in STATE.disks.keys():
         return {'error': 'Invalid name'}
 
@@ -91,6 +90,7 @@ def scan_disk(disk_name: str) -> dict[str, object]:
 
 @app.route('/disk/<disk_name>')
 def get_disk(disk_name: str) -> dict[str, object]:
+    logger.info(f'disk {disk_name}')
     disk = STATE.disks.get(disk_name, {})
     if not disk.get('content', []) and not STATE.running:
         scan_disk(disk_name)
@@ -99,6 +99,7 @@ def get_disk(disk_name: str) -> dict[str, object]:
 
 @app.route('/scan-all')
 async def scan_all() -> dict[str, object]:
+    logger.info(f'scanning all disks')
     if STATE.running:
         return {'error': 'Scanning currently going on, try later'}
     else:
