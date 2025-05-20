@@ -40,7 +40,7 @@ class State:
         except json.JSONDecodeError:
             return {}
 
-logger.info('Starting')
+logger.info('Starting state')
 STATE = State()
 
 app = Flask(__name__)
