@@ -24,6 +24,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class State:
+    running = False
+    host = None
+    disks = None
+
     def __init__(self) -> None:
         logger.info('init State')
         self.running = False
