@@ -39,7 +39,7 @@ class State:
         try:
             return json.loads(disks_json)
         except json.JSONDecodeError:
-            return {}
+            logger.info(f'error while parsing json :(')
 
 STATE = State()
 
