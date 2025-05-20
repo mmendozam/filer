@@ -6,7 +6,7 @@ services:
     container_name: filer
     ports:
       - "5000:5000"
-  environment:
-    - HOST_NAME=${HOST_NAME}
-    - DISKS_JSON=${DISKS_JSON}
+    environment:
+      - HOST_NAME=${HOST_NAME}
+      - DISKS_JSON=${DISKS_JSON}
   restart: unless-stopped
