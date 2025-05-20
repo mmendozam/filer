@@ -7,17 +7,8 @@ import logging
 from scanner import scan
 
 
-# To run:
-#
-# Option 1:
-# python app.py
-#
-# Option 2:
-# set PYTHONPATH=E:\local\GitHub\mmendozam\mmendoza13\python\file-sync
-# flask --app controller run
-
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
 )
 
@@ -47,7 +38,7 @@ app = Flask(__name__)
 
 
 def build_response(disk_name: str) -> dict[str, object]:
-    logger.info(f'build_response "{disk_name}"')
+    logger.info(f'build_response')
     disk = STATE.disks.get(disk_name, {})
     return {
         'host': STATE.host,
@@ -57,6 +48,10 @@ def build_response(disk_name: str) -> dict[str, object]:
         'content': [c.__dict__ for c in disk.get('content', [])]
     }
 
+
+def build_error(error_msg: str) -> dict[str, object]:
+    logger.error(f'build_error - error_msg: "{error_msg}"')
+    return {'error': error_msg}
 
 @app.route('/status')
 def status() -> dict[str, object]:
@@ -70,20 +65,26 @@ def status() -> dict[str, object]:
 
 @app.route('/scan/<disk_name>')
 def scan_disk(disk_name: str) -> dict[str, object]:
-    logger.info(f'scanning {disk_name}')
-    if disk_name not in STATE.disks.keys():
-        return {'error': 'Invalid name'}
-
-    disk = STATE.disks.get(disk_name, {})
+    logger.info(f'scan_disk')
 
     if STATE.running:
-        return {'error': 'Scanning currently going on, try later'}
-    else:
-        STATE.running = True
-        path = Path(disk.get('path'))
-        disk['content'] = scan(path)
-        disk['date'] = datetime.datetime.now()
-        STATE.running = False
+        return build_error('Scanning currently going on, try later')
+    if disk_name not in STATE.disks.keys():
+        return build_error('Invalid name')
+
+    STATE.running = True
+    now = datetime.datetime.now()
+    logger.info(f'disk_name: {disk_name}')
+    logger.info(f'now: {str(now)}')
+    disk = STATE.disks.get(disk_name, {})
+    path = Path(disk.get('path'))
+    logger.info(f'path: {str(path)}')
+    logger.info(f'scanning...')
+    content = scan(path)
+    logger.info(f'content length: {len(content)}')
+    disk['content'] = content
+    disk['date'] = now
+    STATE.running = False
 
     return build_response(disk_name)
 
