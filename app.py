@@ -71,6 +71,7 @@ def get_disk(disk_name: str) -> dict[str, object]:
 
 
 def scan_all_disks() -> None:
+    logger.info(f'scan_all_disks')
     STATE.running = True
     for disk_name in STATE.disks.keys():
         disk = get_disk(disk_name)
@@ -80,12 +81,14 @@ def scan_all_disks() -> None:
             logger.info(f'scanning: {str(path)}')
             content = scan(path)
         except Exception as e:
-            build_error(f'Scan failed with path: {str(path)}', e)
+            logger.error(f'Scan failed with path: {str(path)}')
+            logger.error(str(e))
         finally:
             logger.info(f'content length: {len(content)}')
             disk['content'] = content
             disk['date'] = datetime.datetime.now()
     STATE.running = False
+    logger.info(f'scan_all_disks done')
 
 
 @app.route('/status')
