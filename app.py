@@ -71,8 +71,21 @@ def get_disk(disk_name: str) -> dict[str, object]:
 
 
 def scan_all_disks() -> None:
+    STATE.running = True
     for disk_name in STATE.disks.keys():
-        scan_disk(disk_name)
+        disk = get_disk(disk_name)
+        path = Path(disk.get('path'))
+        content = []
+        try:
+            logger.info(f'scanning: {str(path)}')
+            content = scan(path)
+        except Exception as e:
+            build_error(f'Scan failed with path: {str(path)}', e)
+        finally:
+            logger.info(f'content length: {len(content)}')
+            disk['content'] = content
+            disk['date'] = datetime.datetime.now()
+    STATE.running = False
 
 
 @app.route('/status')
@@ -97,10 +110,10 @@ def scan_disk(disk_name: str) -> dict[str, object]:
     if not is_valid_disk_name(disk_name):
         return build_error('Invalid disk :(')
 
-    response = None
-    content = []
     disk = get_disk(disk_name)
     path = Path(disk.get('path'))
+    content = []
+    response = None
 
     try:
         STATE.running = True
