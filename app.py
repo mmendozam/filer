@@ -48,7 +48,7 @@ def build_disk_response(disk_name: str) -> dict[str, object]:
     disk = STATE.disks.get(disk_name, {})
     return jsonify({
         'host': STATE.host,
-        'disk': disk_name,
+        'label': disk_name,
         'path': disk.get('path'),
         'date': disk.get('date'),
         'content': [c.__dict__ for c in disk.get('content', [])]
