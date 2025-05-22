@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from pathlib import Path
 import datetime
 import os
@@ -38,6 +39,8 @@ class State:
 STATE = State()
 
 app = Flask(__name__)
+# CORS(app, resources={r"/*": {"origins": "https://your-client-domain.com"}})
+CORS(app)
 
 
 def build_disk_response(disk_name: str) -> dict[str, object]:
