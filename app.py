@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from pathlib import Path
 import datetime
 import os
@@ -38,6 +39,8 @@ class State:
 STATE = State()
 
 app = Flask(__name__)
+# CORS(app, resources={r"/*": {"origins": "https://your-client-domain.com"}})
+CORS(app)
 
 
 def build_disk_response(disk_name: str) -> dict[str, object]:
@@ -45,7 +48,7 @@ def build_disk_response(disk_name: str) -> dict[str, object]:
     disk = STATE.disks.get(disk_name, {})
     return jsonify({
         'host': STATE.host,
-        'disk': disk_name,
+        'disk_name': disk_name,
         'path': disk.get('path'),
         'date': disk.get('date'),
         'content': [c.__dict__ for c in disk.get('content', [])]
@@ -71,6 +74,7 @@ def get_disk(disk_name: str) -> dict[str, object]:
 
 
 def scan_all_disks() -> None:
+    logger.info(f'scan_all_disks')
     STATE.running = True
     for disk_name in STATE.disks.keys():
         disk = get_disk(disk_name)
@@ -80,12 +84,14 @@ def scan_all_disks() -> None:
             logger.info(f'scanning: {str(path)}')
             content = scan(path)
         except Exception as e:
-            build_error(f'Scan failed with path: {str(path)}', e)
+            logger.error(f'Scan failed with path: {str(path)}')
+            logger.error(str(e))
         finally:
             logger.info(f'content length: {len(content)}')
             disk['content'] = content
             disk['date'] = datetime.datetime.now()
     STATE.running = False
+    logger.info(f'scan_all_disks done')
 
 
 @app.route('/status')
