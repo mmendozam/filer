@@ -35,11 +35,13 @@ def isExcludeDirectory(directory: str) -> bool:
     return False
 
 
-def process_file(path: Path, content: list[FileSync] = FILES) -> None:
+def process_file(path: Path, content: list[FileSync] = FILES, root: Path = None) -> None:
     parent = path.parent
     directory = str(parent.as_posix()).replace(parent.drive, '', 1)
     if isExcludeDirectory(directory):
         return
+    if root:
+        directory = directory.replace(str(root), '') # to remove the /srv/uuid from the directory path
     file_sync = FileSync(directory, path.name,
                          path.suffix, path.stat().st_size)
     content.append(file_sync)
@@ -63,7 +65,7 @@ def scan(path: Path) -> list[FileSync]:
         if p.is_dir():
             process_folder(p, content)
         elif p.is_file():
-            process_file(p, content)
+            process_file(p, content, path)
 
     return content
 
