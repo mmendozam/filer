@@ -36,7 +36,8 @@ def isExcludeDirectory(directory: str) -> bool:
 
 
 def cleanDiskPath(directory: str, root: Path) -> str:
-    return directory.replace(str(root), '') if root else directory
+    cleaned = directory.replace(str(root), '') if root else directory
+    return cleaned or '/'
 
 
 def process_file(path: Path, content: list[FileSync] = FILES, root: Path = None) -> None:
