@@ -35,20 +35,26 @@ def isExcludeDirectory(directory: str) -> bool:
     return False
 
 
-def process_file(path: Path, content: list[FileSync] = FILES) -> None:
+def cleanDiskPath(directory: str, root: Path) -> str:
+    return directory.replace(str(root), '') if root else directory
+
+
+def process_file(path: Path, content: list[FileSync] = FILES, root: Path = None) -> None:
     parent = path.parent
     directory = str(parent.as_posix()).replace(parent.drive, '', 1)
     if isExcludeDirectory(directory):
         return
+    directory = cleanDiskPath(directory, root)
     file_sync = FileSync(directory, path.name,
                          path.suffix, path.stat().st_size)
     content.append(file_sync)
 
 
-def process_folder(path: Path, content: list[FileSync] = FILES) -> None:
+def process_folder(path: Path, content: list[FileSync] = FILES, root: Path = None) -> None:
     directory = str(path.as_posix()).replace(path.drive, '', 1)
     if isExcludeDirectory(directory):
         return
+    directory = cleanDiskPath(directory, root)
     file_sync = FileSync(directory, '', '<FOLDER>', 0)
     content.append(file_sync)
 
@@ -61,9 +67,9 @@ def scan(path: Path) -> list[FileSync]:
 
     for p in path.rglob('*'):
         if p.is_dir():
-            process_folder(p, content)
+            process_folder(p, content, path)
         elif p.is_file():
-            process_file(p, content)
+            process_file(p, content, path)
 
     return content
 

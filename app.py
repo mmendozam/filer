@@ -39,8 +39,7 @@ class State:
 STATE = State()
 
 app = Flask(__name__)
-# CORS(app, resources={r"/*": {"origins": "https://your-client-domain.com"}})
-CORS(app)
+CORS(app) # CORS(app, resources={r"/*": {"origins": "https://your-client-domain.com"}})
 
 
 def build_disk_response(disk_name: str) -> dict[str, object]:
